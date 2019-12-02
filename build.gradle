@@ -1,0 +1,31 @@
+plugins {
+    id 'org.springframework.boot' version '2.2.0.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'java'
+}
+
+group = 'space.ponyo'
+version = '1.0.0'
+sourceCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'io.netty:netty-all:4.1.38.Final'
+    //数据库
+    implementation 'com.j256.ormlite:ormlite-core:5.1'
+    implementation 'com.j256.ormlite:ormlite-jdbc:5.1'
+    implementation 'org.xerial:sqlite-jdbc:3.27.2.1'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
