@@ -268,13 +268,14 @@ public class PlanPool {
         return future.isCancelled();
     }
 
-    public void addPlan(PlanBean plan) {
+    public boolean addPlan(PlanBean plan) {
+        boolean add = PlanDao.getInstance().add(plan);
         mExecutorService.execute(() -> {
-            boolean add = PlanDao.getInstance().add(plan);
             if (add) {
                 convert(plan);
             }
         });
+        return add;
     }
 
     public void deletePlan(String planId) {

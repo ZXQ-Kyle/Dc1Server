@@ -2,7 +2,7 @@ package space.ponyo.dc1.server.util;
 
 public class LogUtil {
 
-    public static final boolean isRelease = false;
+    public static final boolean isRelease = true;
 
     public static void warning(String msg) {
         System.out.println("########################################################################");

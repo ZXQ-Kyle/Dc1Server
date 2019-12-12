@@ -29,7 +29,7 @@ class NettyServer {
             LogUtil.notice("token:" + property);
             ConnectionManager.getInstance().token = MD5.getMD5(property);
         }
-        SqliteOpenHelper.connectSqlite("jdbc:sqlite:/opt/dc1.conf");
+        SqliteOpenHelper.connectSqlite("jdbc:sqlite:/opt/dc1_database.db");
         new NettySocketServer().start();
     }
 
