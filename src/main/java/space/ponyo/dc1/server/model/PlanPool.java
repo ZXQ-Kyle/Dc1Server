@@ -64,7 +64,7 @@ public class PlanPool {
         }
         ScheduledFuture<?> future = mExecutorService.schedule(() -> {
             mTaskMap.remove(bean.getId());
-            ConnectionManager.getInstance().setDc1Status(bean.getDeviceId(), bean.getStatus());
+            ConnectionManager.getInstance().setDc1Status(bean.getDeviceId(), calcStatus(bean, bean.getCommand()));
             if (PlanBean.REPEAT_ONCE.equals(bean.getRepeat())) {
                 bean.setEnable(false);
                 PlanDao.getInstance().updateOne(bean);
@@ -108,15 +108,21 @@ public class PlanPool {
         long workTime = Integer.parseInt(split[1]) * 60L;
 
         ScheduledFuture<?> startFuture = mExecutorService
-                .scheduleAtFixedRate(() -> calc(planBean, "1"), 0, period, TimeUnit.SECONDS);
+                .scheduleAtFixedRate(() -> repeatRunnable(planBean, "1"), 0, period, TimeUnit.SECONDS);
         mTaskMap.put(planBean.getId() + PlanBean.TASK_SUFFIX_START, startFuture);
 
         ScheduledFuture<?> stopFuture = mExecutorService
-                .scheduleAtFixedRate(() -> calc(planBean, "0"), workTime, period, TimeUnit.SECONDS);
+                .scheduleAtFixedRate(() -> repeatRunnable(planBean, "0"), workTime, period, TimeUnit.SECONDS);
         mTaskMap.put(planBean.getId() + PlanBean.TASK_SUFFIX_STOP, stopFuture);
     }
 
-    private void calc(PlanBean planBean, String command) {
+    private void repeatRunnable(PlanBean planBean, String command) {
+        String status = calcStatus(planBean, command);
+        ConnectionManager.getInstance().setDc1Status(planBean.getDeviceId(), status);
+        LogUtil.info("repeatAtFixedRate 发送指令：" + status);
+    }
+
+    private String calcStatus(PlanBean planBean, String command) {
         String[] status = DataPool.dc1Map.get(planBean.getDeviceId()).getStatus().split("");
         String switchIndex = planBean.getSwitchIndex();
         switch (switchIndex) {
@@ -135,10 +141,12 @@ public class PlanPool {
             default:
                 break;
         }
-        StringBuffer sb = new StringBuffer();
+        if ("1".equals(command)) {
+            status[0] = "1";
+        }
+        StringBuilder sb = new StringBuilder();
         Stream.of(status).forEachOrdered(sb::append);
-        ConnectionManager.getInstance().setDc1Status(planBean.getDeviceId(), sb.toString());
-        LogUtil.info("repeatAtFixedRate 发送指令：" + sb.toString());
+        return sb.toString();
     }
 
     /**
