@@ -10,6 +10,7 @@ import space.ponyo.dc1.server.util.LogUtil;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -52,11 +53,13 @@ public class DeviceConnection implements IConnection {
     /**
      * 临时状态，用于判断设备掉线
      */
-    private boolean online = false;
+    private FixedList online = new FixedList(5);
     /**
      * 查询状态正则
      */
     private Pattern pattern = Pattern.compile("\\{\"uuid\":\"\\w{0,14}\",\"status\":\\d{1,3},\"result\":\\{\"status\":[0|1]{1,4},\"I\":\\d{1,5},\"V\":\\d{1,3},\"P\":\\d{1,4}},\"msg\":\".+\"}[\r|\n]{0,2}");
+    private Pattern patternTwo = Pattern.compile("\\{\"uuid\":\"\\w{0,14}\",\"status\":\\d{1,3},\"result\":\\{\"status\":[0|1]{1,4},\"I\":\\d{1,5},\"V\":\\d{1,3},\"P\":\\d{1,4}},\"msg\":\".+[\r|\n]{0,2}");
+    private Pattern patternThree = Pattern.compile("\\{\"status\":[0|1]{1,4},\"I\":\\d{1,5},\"V\":\\d{1,3},\"P\":\\d{1,4}}");
     //TODO 查询逻辑合并
     /**
      * 设置开关回复，
@@ -137,11 +140,19 @@ public class DeviceConnection implements IConnection {
                 if (answerBean.getStatus() == CODE_SUCCESS) {
                     DataPool.update(id, answerBean.getResult());
                 }
+            } else if (patternTwo.matcher(msg).matches()) {
+                Matcher matcher = patternThree.matcher(msg);
+                while (matcher.find()) {
+                    msg = matcher.group(0);
+                    StatusBean statusBean = gson.fromJson(msg, StatusBean.class);
+                    DataPool.update(id, statusBean);
+                    break;
+                }
             } else {
                 LogUtil.warning(msg);
             }
         }
-        online = true;
+        online.add(true);
         DataPool.online(id);
         ConnectionManager.getInstance().refreshPhoneDeviceData();
     }
@@ -177,10 +188,9 @@ public class DeviceConnection implements IConnection {
     private class QueryTask implements Runnable {
         @Override
         public void run() {
-            if (!online) {
+            if (online.isAllFalse()) {
                 DataPool.offline(id);
             }
-            online = false;
             AskBean<String> askBean = new AskBean<>();
             String uuid = String.format("T%d", System.currentTimeMillis());
             askBean.setAction(DATAPOINT)

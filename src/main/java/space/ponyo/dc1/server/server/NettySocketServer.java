@@ -78,14 +78,14 @@ public class NettySocketServer {
             ChannelPipeline pipeline = socketChannel.pipeline();
             pipeline.addLast(new StringDecoder(CharsetUtil.UTF_8));
             pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
-            pipeline.addLast(new DelimiterBasedFrameDecoder(1024 * 1024, Delimiters.lineDelimiter()));
-//            pipeline.addLast(new LineBasedFrameDecoder(1024 * 1024 * 1024, true, false));
+//            pipeline.addLast(new DelimiterBasedFrameDecoder(1024 * 1024, Delimiters.lineDelimiter()));
+            pipeline.addLast(new LineBasedFrameDecoder(1024 * 1024));
             pipeline.addLast(new IdleStateHandler(15, 15, 15));
             pipeline.addLast("handler", new ServerHandler());//服务器处理客户端请求
         }
     }
 
-    public static class ServerHandler extends ChannelInboundHandlerAdapter {
+    public static class ServerHandler extends SimpleChannelInboundHandler {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             ConnectionManager.getInstance().addChannel(ctx.channel());
@@ -98,7 +98,7 @@ public class NettySocketServer {
         }
 
         @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
             if ("".equals(msg)) {
                 return;
             }
