@@ -75,6 +75,7 @@ public class ConnectionManager {
             if (mDeviceConnectionMap.get(ip + ":" + remotePort).isActive()) {
                 return;
             }
+            DataPool.offline(mDeviceConnectionMap.get(ip + ":" + remotePort).getId());
             mDeviceConnectionMap.remove(ip + ":" + remotePort);
         }
     }
