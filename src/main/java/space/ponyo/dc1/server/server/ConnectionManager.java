@@ -41,7 +41,7 @@ public class ConnectionManager {
         int localPort = localAddress.getPort();
         if (localPort == 8800) {
             //手机连接
-            PhoneConnection connection = mPhoneConnectionMap.get(ip);
+            PhoneConnection connection = mPhoneConnectionMap.get(ip + ":" + remotePort);
             if (connection == null) {
                 connection = new PhoneConnection();
                 mPhoneConnectionMap.put(ip + ":" + remotePort, connection);
