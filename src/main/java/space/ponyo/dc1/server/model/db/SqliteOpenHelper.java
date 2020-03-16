@@ -2,6 +2,7 @@ package space.ponyo.dc1.server.model.db;
 
 
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.table.TableUtils;
 import space.ponyo.dc1.server.model.DataPool;
 import space.ponyo.dc1.server.model.PlanPool;
 

@@ -7,7 +7,7 @@ public class LogUtil {
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public static final boolean isRelease = true;
+    public static final boolean isRelease = false;
 
     public static void warning(String msg) {
         Date date = new Date();

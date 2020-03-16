@@ -1,6 +1,7 @@
 package space.ponyo.dc1.server.server;
 
 import io.netty.channel.Channel;
+import space.ponyo.dc1.server.util.LogUtil;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,9 +28,23 @@ public class ConnectionManager {
         int remotePort = remoteAddress.getPort();
         int localPort = localAddress.getPort();
         if (localPort == 8800) {
-            executorService.execute(() -> mPhoneConnectionMap.get(ip + ":" + remotePort).processMessage(msg));
+            executorService.execute(() -> {
+                PhoneConnection pc = mPhoneConnectionMap.get(ip + ":" + remotePort);
+                if (pc == null) {
+                    LogUtil.warning("手机未上线 ip:" + ip + ":" + localPort);
+                } else {
+                    pc.processMessage(msg);
+                }
+            });
         } else {
-            executorService.execute(() -> mDeviceConnectionMap.get(ip).processMessage(msg));
+            executorService.execute(() -> {
+                DeviceConnection dc = mDeviceConnectionMap.get(ip);
+                if (dc == null) {
+                    LogUtil.warning("dc1设备未上线 ip:" + ip + ":" + localPort);
+                } else {
+                    dc.processMessage(msg);
+                }
+            });
         }
     }
 

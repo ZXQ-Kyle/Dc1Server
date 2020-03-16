@@ -2,7 +2,9 @@ package space.ponyo.dc1.server.model.db;
 
 
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
+@DatabaseTable(tableName = "PlanBean")
 public class PlanBean {
     public static final String ATTR_EXPIRE = "expire";
     public static final String ATTR_TRIGGER_TIME = "triggerTime";

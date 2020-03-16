@@ -9,6 +9,9 @@ import space.ponyo.dc1.server.model.db.PlanDao;
 import space.ponyo.dc1.server.server.ConnectionManager;
 import space.ponyo.dc1.server.util.LogUtil;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 
 @RestController
 public class Controller {
