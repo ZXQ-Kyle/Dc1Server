@@ -81,6 +81,7 @@ public class NettySocketServer {
 //            pipeline.addLast(new DelimiterBasedFrameDecoder(1024 * 1024, Delimiters.lineDelimiter()));
             pipeline.addLast(new LineBasedFrameDecoder(1024 * 1024));
             pipeline.addLast(new IdleStateHandler(15, 15, 15));
+             pipeline.addLast(new HeartBeatServerHandler());
             pipeline.addLast("handler", new ServerHandler());//服务器处理客户端请求
         }
     }
@@ -115,6 +116,17 @@ public class NettySocketServer {
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             ctx.close();
             super.exceptionCaught(ctx, cause);
+        }
+    }
+    
+     public static class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
+        private int lossConnectCount = 0;
+
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+            System.out.println("已经15秒未收到客户端的消息了！close");
+            ctx.channel().close();
+
         }
     }
 }

@@ -29,7 +29,7 @@ public class ConnectionManager {
         if (localPort == 8800) {
             executorService.execute(() -> mPhoneConnectionMap.get(ip + ":" + remotePort).processMessage(msg));
         } else {
-            executorService.execute(() -> mDeviceConnectionMap.get(ip).processMessage(msg));
+            executorService.execute(() -> mDeviceConnectionMap.get(ip + ":" + remotePort).processMessage(msg));
         }
     }
 
@@ -41,7 +41,7 @@ public class ConnectionManager {
         int localPort = localAddress.getPort();
         if (localPort == 8800) {
             //手机连接
-            PhoneConnection connection = mPhoneConnectionMap.get(ip);
+            PhoneConnection connection = mPhoneConnectionMap.get(ip + ":" + remotePort);
             if (connection == null) {
                 connection = new PhoneConnection();
                 mPhoneConnectionMap.put(ip + ":" + remotePort, connection);
@@ -52,7 +52,7 @@ public class ConnectionManager {
             DeviceConnection connection = mDeviceConnectionMap.get(ip);
             if (connection == null) {
                 connection = new DeviceConnection();
-                mDeviceConnectionMap.put(ip, connection);
+                mDeviceConnectionMap.put(ip + ":" + remotePort, connection);
             }
             connection.setChannel(channel);
             return connection;
@@ -72,10 +72,11 @@ public class ConnectionManager {
             }
             mPhoneConnectionMap.remove(ip + ":" + remotePort);
         } else {
-            if (mDeviceConnectionMap.get(ip).isActive()) {
+            if (mDeviceConnectionMap.get(ip + ":" + remotePort).isActive()) {
                 return;
             }
-            mDeviceConnectionMap.remove(ip);
+            DataPool.offline(mDeviceConnectionMap.get(ip + ":" + remotePort).getId());
+            mDeviceConnectionMap.remove(ip + ":" + remotePort);
         }
     }
 
