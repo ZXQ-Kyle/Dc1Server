@@ -1,8 +1,6 @@
 package space.ponyo.dc1.server.server;
 
 import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Stream;
 
 class FixedList {
 

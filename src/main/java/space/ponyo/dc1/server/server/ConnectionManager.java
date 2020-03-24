@@ -1,6 +1,7 @@
 package space.ponyo.dc1.server.server;
 
 import io.netty.channel.Channel;
+import space.ponyo.dc1.server.model.DataPool;
 import space.ponyo.dc1.server.util.LogUtil;
 
 import java.net.InetSocketAddress;
@@ -38,7 +39,7 @@ public class ConnectionManager {
             });
         } else {
             executorService.execute(() -> {
-                DeviceConnection dc = mDeviceConnectionMap.get(ip);
+                DeviceConnection dc = mDeviceConnectionMap.get(ip + ":" + remotePort);
                 if (dc == null) {
                     LogUtil.warning("dc1设备未上线 ip:" + ip + ":" + localPort);
                 } else {
@@ -56,7 +57,7 @@ public class ConnectionManager {
         int localPort = localAddress.getPort();
         if (localPort == 8800) {
             //手机连接
-            PhoneConnection connection = mPhoneConnectionMap.get(ip);
+            PhoneConnection connection = mPhoneConnectionMap.get(ip + ":" + remotePort);
             if (connection == null) {
                 connection = new PhoneConnection();
                 mPhoneConnectionMap.put(ip + ":" + remotePort, connection);
@@ -64,10 +65,10 @@ public class ConnectionManager {
             connection.setChannel(channel);
             return connection;
         } else {
-            DeviceConnection connection = mDeviceConnectionMap.get(ip);
+            DeviceConnection connection = mDeviceConnectionMap.get(ip + ":" + remotePort);
             if (connection == null) {
                 connection = new DeviceConnection();
-                mDeviceConnectionMap.put(ip, connection);
+                mDeviceConnectionMap.put(ip + ":" + remotePort, connection);
             }
             connection.setChannel(channel);
             return connection;
@@ -82,15 +83,18 @@ public class ConnectionManager {
         int localPort = localAddress.getPort();
         if (localPort == 8800) {
             //手机连接
-            if (mPhoneConnectionMap.get(ip + ":" + remotePort).isActive()) {
+            PhoneConnection phoneConnection = mPhoneConnectionMap.get(ip + ":" + remotePort);
+            if (phoneConnection == null || phoneConnection.isActive()) {
                 return;
             }
             mPhoneConnectionMap.remove(ip + ":" + remotePort);
         } else {
-            if (mDeviceConnectionMap.get(ip).isActive()) {
+            DeviceConnection deviceConnection = mDeviceConnectionMap.get(ip + ":" + remotePort);
+            if (deviceConnection == null || deviceConnection.isActive()) {
                 return;
             }
-            mDeviceConnectionMap.remove(ip);
+            DataPool.offline(deviceConnection.getId());
+            mDeviceConnectionMap.remove(ip + ":" + remotePort);
         }
     }
 

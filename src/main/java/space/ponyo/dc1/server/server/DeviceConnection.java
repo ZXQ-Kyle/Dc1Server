@@ -97,7 +97,7 @@ public class DeviceConnection implements IConnection {
                 }.getType();
                 AskBean<ActivateBean> askBean = gson.fromJson(msg, type);
                 id = askBean.getParams().getMac();
-                sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 1, TimeUnit.MINUTES);
+                sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
             } else if (msg.contains(IDENTIFY)) {
                 //收到dc1上线数据 第二种数据格式
                 Type type = new TypeToken<AskBean<IdentifyBean>>() {
@@ -110,7 +110,7 @@ public class DeviceConnection implements IConnection {
                         .setStatus(200)
                         .setMsg("device identified");
                 appendMsgToQueue(gson.toJson(answerBean));
-                sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 1, TimeUnit.MINUTES);
+                sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
             } else if (msg.contains(DETAL_KWH)) {
                 //收到用电量增加
                 Type type = new TypeToken<AskBean<DetalKwhBean>>() {
