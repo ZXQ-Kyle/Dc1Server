@@ -50,6 +50,9 @@ public class PlanPool {
      * @param bean
      */
     private void convert(PlanBean bean) {
+        if (bean == null) {
+            return;
+        }
         if (!bean.isEnable()) {
             return;
         }
@@ -286,23 +289,26 @@ public class PlanPool {
         return add;
     }
 
-    public void deletePlan(String planId) {
+    public boolean deletePlan(String planId) {
         canclePlan(planId);
         try {
             PlanDao.getInstance().deleteById(planId);
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
-    public void enablePlan(String id, boolean enable) {
+    public boolean enablePlan(String id, boolean enable) {
+        PlanBean planBean = PlanDao.getInstance().enablePlanById(id, enable);
         mExecutorService.execute(() -> {
-            PlanBean planBean = PlanDao.getInstance().enablePlanById(id, enable);
             if (enable) {
                 convert(planBean);
             } else {
                 canclePlan(id);
             }
         });
+        return planBean != null;
     }
 }

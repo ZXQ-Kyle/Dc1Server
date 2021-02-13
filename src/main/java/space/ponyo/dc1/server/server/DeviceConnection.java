@@ -97,6 +97,7 @@ public class DeviceConnection implements IConnection {
                 }.getType();
                 AskBean<ActivateBean> askBean = gson.fromJson(msg, type);
                 id = askBean.getParams().getMac();
+                LogUtil.notice("dc1设备上线：id=" + id);
                 sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
             } else if (msg.contains(IDENTIFY)) {
                 //收到dc1上线数据 第二种数据格式
@@ -104,6 +105,7 @@ public class DeviceConnection implements IConnection {
                 }.getType();
                 AskBean<IdentifyBean> askBean = gson.fromJson(msg, type);
                 id = askBean.getParams().getDeviceId();
+                LogUtil.notice("dc1设备上线：id=" + id);
                 AnswerBean<Object> answerBean = new AnswerBean<>();
                 answerBean.setUuid(askBean.getUuid())
                         .setResult(new Object())
@@ -116,9 +118,11 @@ public class DeviceConnection implements IConnection {
                 Type type = new TypeToken<AskBean<DetalKwhBean>>() {
                 }.getType();
                 AskBean<DetalKwhBean> askBean = gson.fromJson(msg, type);
-                int detalKWh = askBean.getParams().getDetalKWh();
-                DataPool.update(id, detalKWh);
-                ConnectionManager.getInstance().refreshPhoneDeviceData();
+                int deltaKWh = askBean.getParams().getDetalKWh();
+                boolean update = DataPool.update(id, deltaKWh);
+                if (update) {
+                    ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
+                }
             } else {
                 LogUtil.warning(msg);
             }
@@ -131,21 +135,30 @@ public class DeviceConnection implements IConnection {
                 }.getType();
                 AnswerBean<StatusBean> answerBean = gson.fromJson(msg, type);
                 if (answerBean.getStatus() == CODE_SUCCESS) {
-                    DataPool.update(id, answerBean.getResult());
+                    boolean update = DataPool.update(id, answerBean.getResult());
+                    if (update) {
+                        ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
+                    }
                 }
             } else if (statusPattern.matcher(msg).matches()) {
                 Type type = new TypeToken<AnswerBean<SwitchSetBean>>() {
                 }.getType();
                 AnswerBean<SwitchSetBean> answerBean = gson.fromJson(msg, type);
                 if (answerBean.getStatus() == CODE_SUCCESS) {
-                    DataPool.update(id, answerBean.getResult());
+                    boolean update = DataPool.update(id, answerBean.getResult());
+                    if (update) {
+                        ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
+                    }
                 }
             } else if (patternTwo.matcher(msg).matches()) {
                 Matcher matcher = patternThree.matcher(msg);
                 while (matcher.find()) {
                     msg = matcher.group(0);
                     StatusBean statusBean = gson.fromJson(msg, StatusBean.class);
-                    DataPool.update(id, statusBean);
+                    boolean update = DataPool.update(id, statusBean);
+                    if (update) {
+                        ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
+                    }
                     break;
                 }
             } else {
@@ -153,8 +166,9 @@ public class DeviceConnection implements IConnection {
             }
         }
         online.add(true);
-        DataPool.online(id);
-        ConnectionManager.getInstance().refreshPhoneDeviceData();
+        if (DataPool.online(id)) {
+            ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
+        }
     }
 
     public void close() {
@@ -189,7 +203,10 @@ public class DeviceConnection implements IConnection {
         @Override
         public void run() {
             if (online.isAllFalse()) {
-                DataPool.offline(id);
+                boolean offline = DataPool.offline(id);
+                if (offline) {
+                    ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
+                }
             }
             AskBean<String> askBean = new AskBean<>();
             String uuid = String.format("T%d", System.currentTimeMillis());

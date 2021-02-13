@@ -4,13 +4,14 @@ package space.ponyo.dc1.server.model.db;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 @DatabaseTable(tableName = "Dc1")
 public class Dc1Bean {
     public static final String ATTR_ID = "id";
-
     /**
      * mac或者uuid
      */
@@ -50,6 +51,16 @@ public class Dc1Bean {
     @DatabaseField(dataType = DataType.SERIALIZABLE)
     private ArrayList<String> names;
 
+    //new
+//    /**
+//     * 插排名称
+//     */
+//    private String name;
+//
+//    /**
+//     * 插孔状态
+//     */
+//    private List<SwitchBean> switchList;
 
 
     public String getId() {
@@ -62,7 +73,7 @@ public class Dc1Bean {
     }
 
     public String getStatus() {
-        return status;
+        return status == null ? "" : status;
     }
 
     public Dc1Bean setStatus(String status) {
@@ -106,8 +117,9 @@ public class Dc1Bean {
         return this;
     }
 
+    @NonNull
     public ArrayList<String> getNames() {
-        return names;
+        return names == null ? new ArrayList<>(0) : names;
     }
 
     public Dc1Bean setNames(ArrayList<String> names) {
@@ -156,5 +168,22 @@ public class Dc1Bean {
                 ", totalPower=" + totalPower +
                 ", names=" + names +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Dc1Bean dc1Bean = (Dc1Bean) o;
+        return I == dc1Bean.I &&
+                V == dc1Bean.V &&
+                P == dc1Bean.P &&
+                updateTime == dc1Bean.updateTime &&
+                online == dc1Bean.online &&
+                powerStartTime == dc1Bean.powerStartTime &&
+                totalPower == dc1Bean.totalPower &&
+                Objects.equals(id, dc1Bean.id) &&
+                Objects.equals(status, dc1Bean.status) &&
+                Objects.equals(names, dc1Bean.names);
     }
 }

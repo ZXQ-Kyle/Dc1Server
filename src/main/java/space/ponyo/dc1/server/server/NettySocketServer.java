@@ -80,7 +80,7 @@ public class NettySocketServer {
             pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
 //            pipeline.addLast(new DelimiterBasedFrameDecoder(1024 * 1024, Delimiters.lineDelimiter()));
             pipeline.addLast(new LineBasedFrameDecoder(1024 * 1024));
-            pipeline.addLast(new IdleStateHandler(15, 15, 15));
+            pipeline.addLast(new IdleStateHandler(60, 60, 60));
             pipeline.addLast(new HeartBeatServerHandler());
             pipeline.addLast("handler", new ServerHandler());//服务器处理客户端请求
         }
@@ -122,8 +122,8 @@ public class NettySocketServer {
     public static class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-            LogUtil.notice("已经15秒未收到客户端的消息了！close");
-            ctx.channel().close();
+//            LogUtil.notice("已经60秒未收到客户端的消息了！关闭客户端连接");
+//            ctx.channel().close();
         }
     }
 }

@@ -10,6 +10,7 @@ import space.ponyo.dc1.server.model.db.PlanBean;
 import space.ponyo.dc1.server.model.db.PlanDao;
 import space.ponyo.dc1.server.util.LogUtil;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -67,13 +68,21 @@ public class PhoneConnection implements IConnection {
         appendMsgToQueue(msg);
     }
 
+    public String getAddress() {
+        if (channel != null) {
+            InetSocketAddress address = (InetSocketAddress) channel.remoteAddress();
+            return address.getHostString() + ":" + address.getPort();
+        }
+        return "";
+    }
+
     /**
      * 收到手机端消息，处理逻辑
      *
      * @param msg
      */
     public void processMessage(String msg) {
-        LogUtil.info("phone|receive id=" + channel.id() + " message=" + msg);
+        LogUtil.notice("phone|receive id=" + channel.id() + " message=" + msg);
         msg = msg.replace("\n", "");
         final String[] split = msg.split(" ", 3);
         String action = split[0];
@@ -118,7 +127,7 @@ public class PhoneConnection implements IConnection {
                     ArrayList<String> nameList = gson.fromJson(names, new TypeToken<ArrayList<String>>() {
                     }.getType());
                     DataPool.updateName(id, nameList);
-                    ConnectionManager.getInstance().refreshPhoneDeviceData();
+                    ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
                 }
                 break;
             }
@@ -128,7 +137,7 @@ public class PhoneConnection implements IConnection {
                 if (matcher.matches()) {
                     String id = matcher.group("id");
                     DataPool.resetPower(id);
-                    ConnectionManager.getInstance().refreshPhoneDeviceData();
+                    ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
                 }
                 break;
             }

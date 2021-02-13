@@ -109,11 +109,14 @@ public class ConnectionManager {
     /**
      * 推送设备最新数据
      */
-    public void refreshPhoneDeviceData() {
+    public void pushPhoneDeviceDataChanged() {
         mPhoneConnectionMap
                 .values()
                 .parallelStream()
-                .forEach(phoneConnection -> phoneConnection.processMessage("queryDevice " + token));
+                .forEach(phoneConnection -> {
+                    phoneConnection.pushMessage("deviceChanged");
+                    LogUtil.notice(String.format("推送设备状态更新：phone=%s", phoneConnection.getAddress()));
+                });
     }
 
     /**
