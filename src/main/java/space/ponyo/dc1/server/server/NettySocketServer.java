@@ -1,14 +1,10 @@
 package space.ponyo.dc1.server.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.handler.codec.Delimiters;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
@@ -21,7 +17,6 @@ import java.net.InetSocketAddress;
 
 public class NettySocketServer {
     private static final int PORT_DEVICE = 8000;
-    private static final int PORT_PHONE = 8800;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
@@ -50,13 +45,9 @@ public class NettySocketServer {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture channelFutureDc1 = bootstrap.bind(PORT_DEVICE);
-            ChannelFuture channelFuturePhone = bootstrap.bind(PORT_PHONE);
             channelFutureDc1.sync();//服务器异步创建绑定
-            channelFuturePhone.sync();
             System.out.println("Server is listening：" + ((InetSocketAddress) channelFutureDc1.channel().localAddress()).getPort());
-            System.out.println("Server is listening：" + ((InetSocketAddress) channelFuturePhone.channel().localAddress()).getPort());
             channelFutureDc1.channel().closeFuture().sync();//关闭服务器
-            channelFuturePhone.channel().closeFuture().sync();//关闭服务器
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -126,4 +117,5 @@ public class NettySocketServer {
 //            ctx.channel().close();
         }
     }
+
 }

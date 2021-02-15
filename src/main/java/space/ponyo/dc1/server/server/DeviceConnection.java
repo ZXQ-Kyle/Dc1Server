@@ -19,15 +19,15 @@ import java.util.regex.Pattern;
 
 public class DeviceConnection implements IConnection {
     /**
-     * 设备上线1
+     * 设备上线类型1
      */
     public static final String ACTIVATE = "activate=";
     /**
-     * 设备上线2
+     * 设备上线类型2
      */
     public static final String IDENTIFY = "identify";
     /**
-     * 每增加50kwh，自动上报
+     * 每增加0.050kwh，自动上报，
      */
     public static final String DETAL_KWH = "kWh+";
     /**
@@ -42,13 +42,14 @@ public class DeviceConnection implements IConnection {
     public static final int CODE_SUCCESS = 200;
 
     //周期消息发送间隔时间（ms）
-    private final static int DEFAULT_TIME = 100;
+    private final static int DEFAULT_TIME = 1000;
 
     private Channel channel;
     /**
      * dc1的mac，唯一标识
      */
     private String id;
+
     private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
     /**
      * 临时状态，用于判断设备掉线
@@ -67,11 +68,9 @@ public class DeviceConnection implements IConnection {
     private Pattern statusPattern = Pattern.compile("\\{\"uuid\":\"\\w{0,14}\",\"status\":\\d{1,3},\"result\":\\{\"status\":[0|1]{1,4}},\"msg\":\".+\"}[\r|\n]{0,2}");
     // 消息队列
     private final LinkedBlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
-    private static ScheduledExecutorService sendMessageScheduleThread;
 
     public DeviceConnection() {
-        sendMessageScheduleThread = Executors.newScheduledThreadPool(5);
-        sendMessageScheduleThread.scheduleWithFixedDelay(new SendTask(), 0, DEFAULT_TIME, TimeUnit.MILLISECONDS);
+        GlobalExecutors.getInstance().scheduleWithFixedDelay(new SendTask(), 0, DEFAULT_TIME, TimeUnit.MILLISECONDS);
     }
 
     public void setChannel(Channel channel) {
@@ -98,7 +97,7 @@ public class DeviceConnection implements IConnection {
                 AskBean<ActivateBean> askBean = gson.fromJson(msg, type);
                 id = askBean.getParams().getMac();
                 LogUtil.notice("dc1设备上线：id=" + id);
-                sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
+                GlobalExecutors.getInstance().scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
             } else if (msg.contains(IDENTIFY)) {
                 //收到dc1上线数据 第二种数据格式
                 Type type = new TypeToken<AskBean<IdentifyBean>>() {
@@ -112,7 +111,7 @@ public class DeviceConnection implements IConnection {
                         .setStatus(200)
                         .setMsg("device identified");
                 appendMsgToQueue(gson.toJson(answerBean));
-                sendMessageScheduleThread.scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
+                GlobalExecutors.getInstance().scheduleWithFixedDelay(new QueryTask(), 0, 5, TimeUnit.SECONDS);
             } else if (msg.contains(DETAL_KWH)) {
                 //收到用电量增加
                 Type type = new TypeToken<AskBean<DetalKwhBean>>() {
@@ -120,9 +119,6 @@ public class DeviceConnection implements IConnection {
                 AskBean<DetalKwhBean> askBean = gson.fromJson(msg, type);
                 int deltaKWh = askBean.getParams().getDetalKWh();
                 boolean update = DataPool.update(id, deltaKWh);
-                if (update) {
-                    ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-                }
             } else {
                 LogUtil.warning(msg);
             }
@@ -136,9 +132,6 @@ public class DeviceConnection implements IConnection {
                 AnswerBean<StatusBean> answerBean = gson.fromJson(msg, type);
                 if (answerBean.getStatus() == CODE_SUCCESS) {
                     boolean update = DataPool.update(id, answerBean.getResult());
-                    if (update) {
-                        ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-                    }
                 }
             } else if (statusPattern.matcher(msg).matches()) {
                 Type type = new TypeToken<AnswerBean<SwitchSetBean>>() {
@@ -146,9 +139,6 @@ public class DeviceConnection implements IConnection {
                 AnswerBean<SwitchSetBean> answerBean = gson.fromJson(msg, type);
                 if (answerBean.getStatus() == CODE_SUCCESS) {
                     boolean update = DataPool.update(id, answerBean.getResult());
-                    if (update) {
-                        ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-                    }
                 }
             } else if (patternTwo.matcher(msg).matches()) {
                 Matcher matcher = patternThree.matcher(msg);
@@ -156,9 +146,6 @@ public class DeviceConnection implements IConnection {
                     msg = matcher.group(0);
                     StatusBean statusBean = gson.fromJson(msg, StatusBean.class);
                     boolean update = DataPool.update(id, statusBean);
-                    if (update) {
-                        ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-                    }
                     break;
                 }
             } else {
@@ -166,9 +153,6 @@ public class DeviceConnection implements IConnection {
             }
         }
         online.add(true);
-        if (DataPool.online(id)) {
-            ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-        }
     }
 
     public void close() {
@@ -204,9 +188,6 @@ public class DeviceConnection implements IConnection {
         public void run() {
             if (online.isAllFalse()) {
                 boolean offline = DataPool.offline(id);
-                if (offline) {
-                    ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-                }
             }
             AskBean<String> askBean = new AskBean<>();
             String uuid = String.format("T%d", System.currentTimeMillis());
