@@ -2,6 +2,7 @@ package space.ponyo.dc1.server.server;
 
 import io.netty.channel.Channel;
 import space.ponyo.dc1.server.model.DataPool;
+import space.ponyo.dc1.server.util.LogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,8 @@ public class ConnectionManager {
         if (deviceConnection == null) {
             return;
         }
-        if (deviceConnection.isActive()){
+        LogUtil.notice("连接断开，断开设备id=" + deviceConnection.getId());
+        if (deviceConnection.isActive()) {
             deviceConnection.close();
         }
         DataPool.offline(deviceConnection.getId());
@@ -60,7 +62,7 @@ public class ConnectionManager {
         mDeviceConnectionMap
                 .values()
                 .parallelStream()
-                .filter(connection -> connection.getId().equals(id))
+                .filter(connection -> id.equals(connection.getId()))
                 .forEach(connection -> connection.setStatus(status));
     }
 
@@ -68,7 +70,7 @@ public class ConnectionManager {
     public void clearInvalidData() {
         List<String> keys = new ArrayList<>();
         mDeviceConnectionMap.forEach((key, value) -> {
-            if (value.getId() == null || (!value.isActive())) {
+            if (value.getId().isEmpty()|| (!value.isActive())) {
                 keys.add(key);
             }
         });

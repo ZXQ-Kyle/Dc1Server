@@ -177,7 +177,7 @@ public class DataPool {
      * @return 需要推送更新，返回true，否则false
      */
     public static boolean offline(String id) {
-        if (id == null) {
+        if (id == null||id.isEmpty()) {
             return false;
         }
         Dc1Bean dc1Bean = dc1Map.get(id);

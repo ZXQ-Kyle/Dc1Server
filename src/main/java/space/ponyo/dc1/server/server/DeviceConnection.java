@@ -218,6 +218,6 @@ public class DeviceConnection implements IConnection {
     }
 
     public String getId() {
-        return id;
+        return id == null ? "" : id;
     }
 }
