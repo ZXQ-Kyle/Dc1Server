@@ -27,7 +27,7 @@ public class DataPool {
                 return;
             }
             Dc1Dao.getInstance().updateAll(dc1Map.values());
-        }, 60, 60, TimeUnit.SECONDS);
+        }, 5, 5, TimeUnit.MINUTES);
     }
 
     /**

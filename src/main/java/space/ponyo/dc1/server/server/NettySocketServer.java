@@ -105,6 +105,8 @@ public class NettySocketServer {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            ConnectionManager.getInstance().removeChannel(ctx.channel());
+            ConnectionManager.getInstance().clearInvalidData();
             ctx.close();
             super.exceptionCaught(ctx, cause);
         }

@@ -71,7 +71,6 @@ public class PlanPool {
             if (PlanBean.REPEAT_ONCE.equals(bean.getRepeat())) {
                 bean.setEnable(false);
                 PlanDao.getInstance().updateOne(bean);
-                ConnectionManager.getInstance().pushPlanDataChanged(bean.getId());
             }
             //执行完成后添加下一次触发的任务
             convert(bean);
@@ -209,7 +208,6 @@ public class PlanPool {
                 if (array.length == 7) {
                     bean.setRepeat(PlanBean.REPEAT_EVERYDAY);
                     PlanDao.getInstance().updateOne(bean);
-                    ConnectionManager.getInstance().pushPlanDataChanged(bean.getId());
                     if (diff > 1) {
                         diffSecond = diff;
                     } else {
@@ -253,7 +251,6 @@ public class PlanPool {
         bean.setEnable(false)
                 .setRepeat(PlanBean.REPEAT_ONCE);
         PlanDao.getInstance().updateOne(bean);
-        ConnectionManager.getInstance().pushPlanDataChanged(bean.getId());
     }
 
     private boolean canclePlan(String planId) {

@@ -63,9 +63,6 @@ public class Controller {
             }
         }
         boolean update = DataPool.updateName(id, new ArrayList<>(Arrays.asList(target)));
-        if (update) {
-            ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-        }
         return MyHttpResponse.success(true);
     }
 
@@ -78,9 +75,6 @@ public class Controller {
             return MyHttpResponse.error("token验证失败！");
         }
         boolean update = DataPool.resetPower(id);
-        if (update) {
-            ConnectionManager.getInstance().pushPhoneDeviceDataChanged();
-        }
         return MyHttpResponse.success(true);
     }
 

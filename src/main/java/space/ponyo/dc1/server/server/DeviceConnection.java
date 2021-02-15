@@ -153,6 +153,7 @@ public class DeviceConnection implements IConnection {
             }
         }
         online.add(true);
+        DataPool.online(id);
     }
 
     public void close() {

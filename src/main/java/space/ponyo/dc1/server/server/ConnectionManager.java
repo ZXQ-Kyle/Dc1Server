@@ -3,6 +3,8 @@ package space.ponyo.dc1.server.server;
 import io.netty.channel.Channel;
 import space.ponyo.dc1.server.model.DataPool;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,8 +46,11 @@ public class ConnectionManager {
 
     public void removeChannel(Channel channel) {
         DeviceConnection deviceConnection = mDeviceConnectionMap.get(channel.id().asLongText());
-        if (deviceConnection == null || deviceConnection.isActive()) {
+        if (deviceConnection == null) {
             return;
+        }
+        if (deviceConnection.isActive()){
+            deviceConnection.close();
         }
         DataPool.offline(deviceConnection.getId());
         mDeviceConnectionMap.remove(channel.id().asLongText());
@@ -57,5 +62,18 @@ public class ConnectionManager {
                 .parallelStream()
                 .filter(connection -> connection.getId().equals(id))
                 .forEach(connection -> connection.setStatus(status));
+    }
+
+    ///清除无连接的数据
+    public void clearInvalidData() {
+        List<String> keys = new ArrayList<>();
+        mDeviceConnectionMap.forEach((key, value) -> {
+            if (value.getId() == null || (!value.isActive())) {
+                keys.add(key);
+            }
+        });
+        if (keys.size() > 0) {
+            keys.forEach((key) -> mDeviceConnectionMap.remove(key));
+        }
     }
 }
